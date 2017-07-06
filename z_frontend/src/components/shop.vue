@@ -20,13 +20,17 @@
         <mu-tbody>
           <mu-tr v-for="(list , index) in shop">
             <mu-td>{{index+1}}</mu-td>
-            <mu-td></mu-td>
+              <mu-td>
+                  <img v-if="list.cover" style="width: 80px; height: 45px;" :src="'http://localhost:8888/'+ list.cover" alt="">
+              </mu-td>
             <mu-td>{{list.name}}</mu-td>
             <mu-td>{{list.type.name}}</mu-td>
             <mu-td>
               <mu-raised-button label="删除" class="demo-raised-button" secondary @click="deleteShop(list._id)" />
 
               <mu-raised-button label="编辑" class="demo-raised-button" secondary @click="showEditShop(list)" />
+
+              <mu-raised-button label="上传封面" class="demo-raised-button" secondary @click="addshopimg(list)" />
             </mu-td>
           </mu-tr>
 
@@ -68,45 +72,56 @@
     </mu-popup>
 
 
-     <mu-dialog :open="dialog.open" :title="'修改 《'+editData.origin_name+'》'" @close="dialog.open=false">
-            <form>
-                <h4>类别名称</h4>
-                <p>
-                    <mu-text-field  v-model="editData.name"  label="请输入一个要添加的商家类别名称" labelFloat/>
-                </p>
-                <p>
-                <!-- {{editData.shops&&editData.shop.name}} -->
-                    <mu-text-field  v-model="editData.type.name"  label="请输入一个要添加的商家类别名称" labelFloat/>
-                </p>
-                 <!-- <p> 
-                    <mu-text-field  v-model="editData.price"  label="请输入一个要添加的商家类别名称" labelFloat/>
-                </p> -->
-            </form>
-            <mu-flat-button slot="actions" primary @click="editShop" label="确定"/>
-        </mu-dialog>
+     <mu-dialog :open="diaimg.open" :title="'上传封面到 '+uploadDatashop.name" @close="diaimg.open=false">
+             <mu-grid-list v-show="uploadDatashop.fileUrl">
+                <mu-grid-tile :cols="12">
+                    <img :src="uploadDatashop.fileUrl"/>
+                </mu-grid-tile>
+            </mu-grid-list>
+            <mu-linear-progress mode="determinate"  :value="progressValue" />
+            <p>
+                <input type="file" name="cover" @change="changeFile" />  
+            </p>
+            <mu-flat-button slot="actions" primary @click="showUpload" label="确定"/>
+    </mu-dialog>
+
+
+    <mu-dialog :open="dialog.open" :title="'修改 《'+editData.origin_name+'》'" @close="dialog.open=false">
+        <form>
+            <h4>类别名称</h4>
+            <p>
+                <mu-text-field  v-model="editData.name"  label="请输入一个要添加的商家类别名称" labelFloat/>
+            </p>
+            <p> 
+                <mu-text-field  v-model="editData.type.name"  label="请输入一个要添加的商家类别名称" labelFloat/>
+            </p>
+            
+        </form>
+        <mu-flat-button slot="actions" primary @click="editShop" label="确定"/>
+    </mu-dialog>
 
   </div>
 </template>
 
-<style>
-  
-.demo-popup-top {
-  width: 100%;
-  opacity: .8;
-  height: 48px;
-  line-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 375px;
-}
-.error {
-    background: red !important;
-    color: white !important;
-}
-  .mu-grid-tile-titlebar {
-        display: none;
-    }
+<style scoped>
+        
+      .demo-popup-top {
+        width: 100%;
+        opacity: .8;
+        height: 48px;
+        line-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 375px;
+      }
+      .error {
+          background: red !important;
+          color: white !important;
+      }
+      .mu-grid-tile-titlebar {
+            display: none;
+        }
 </style>
 
 <script>
@@ -128,6 +143,7 @@
         },
         AddFromshop:{
           name:'',
+          cover:'',
           type:'',
           phone:'',
           address:'',
@@ -136,12 +152,22 @@
         dialog: {
             open: false
         },
+        diaimg:{
+          open:false
+        },
         editData:{
             id:'',
             name:'',
             type:'' 
             // price:''
-        }
+        },
+        uploadDatashop:{
+          id:'',
+          file:'',
+          fileUrl:'',
+          cover:''
+        },
+        progressValue: 0
       }
     },
     created(){
@@ -161,6 +187,7 @@
        }
     },
     methods:{
+       
       click(name) {
         this.focus = name;
         this.$store.dispatch('getShop', {
@@ -201,48 +228,94 @@
           }
  
         }) 
+      }, 
+      editShop(){
+           if (this.editData.name == this.editData.origin_name) {
+              this.showPopup(true, '未做任何修改', 1000);
+              return;
+           }
+           // console.log(this.editData._id,this.editData.name);
+          this.$store.dispatch('editShop',{
+              $http:this.$http,
+              data:{
+                 id: this.editData._id,
+                 name: this.editData.name, 
+                 type:this.editData.type._id
+                 // price:this.editData.price
+              }
+           }).then((response)=> {
+                // console.log(data);
+                if(response.data.code){
+                  // if (response.data.code == 2) {
+                  //     this.editData.name = this.editData.origin_name;
+                  // }
+                  this.showPopup(true,response.data.message,3000);
+                }else{
+                  this.showPopup(false, '修改成', 1000);
+                  this.$store.dispatch('getShop', {
+                    $http: this.$http
+                  }); 
+                  this.dialog.open=false;
+                } 
+            }) 
+      },
+      //选择上传的图片
+      changeFile(e){
+
+        this.uploadDatashop.file = e.target.files[0];
+        console.log( this.uploadDatashop.file);
+        const fr = new FileReader();
+        fr.onload = ()  =>{
+          this.uploadDatashop.fileUrl=fr.result;
+        }
+        fr.readAsDataURL(this.uploadDatashop.file)
+
+      },
+      //上传
+      showUpload(){
+        console.log(this.uploadDatashop)
+        var _this=this;
+        this.$store.dispatch('showUpload',{
+          $http:this.$http,
+          data:{
+            id:this.uploadDatashop._id,
+             
+            cover:this.uploadDatashop.file,
+            onUploadProgress: function(e) {
+                _this.progressValue = parseInt(e.loaded / e.total * 100);
+            }
+          }
+        }).then((response)=>{
+          console.log(response.data)
+          if(!response.data.code){
+            this.diaimg.open=false;
+            this.$store.dispatch('getShop',{
+               $http:this.$http
+            })
+          }
+
+          this.showPopup(false, '上传成功', 1000);
+
+        })
       },
 
-        editShop(){
-             if (this.editData.name == this.editData.origin_name) {
-                this.showPopup(true, '未做任何修改', 1000);
-                return;
-             }
-             // console.log(this.editData._id,this.editData.name);
-            this.$store.dispatch('editShop',{
-                $http:this.$http,
-                data:{
-                   id: this.editData._id,
-                   name: this.editData.name, 
-                   type:this.editData.type._id
-                   // price:this.editData.price
-                }
-             }).then((response)=> {
-                  // console.log(data);
-                  if(response.data.code){
-                    // if (response.data.code == 2) {
-                    //     this.editData.name = this.editData.origin_name;
-                    // }
-                    this.showPopup(true,response.data.message,3000);
-                  }else{
-                    this.showPopup(false, '修改成', 1000);
-                    this.$store.dispatch('getShop', {
-                      $http: this.$http
-                    }); 
-                    this.dialog.open=false;
-                  } 
-            }) 
-        },
 
-       // 显示编辑的弹窗
-        showEditShop(data) {
-            // data.allowSelected = false;
-            this.editData = data;
-            this.editData.origin_name = data.name;
-            this.editData.type=data.type;
-            // this.editData.price=data.price;
-            this.dialog.open = true;
-        }
+      // 显示编辑的弹窗
+      showEditShop(data) {
+          // data.allowSelected = false;
+          this.editData = data;
+          this.editData.origin_name = data.name;
+          this.editData.type=data.type;
+          // this.editData.price=data.price;
+          this.dialog.open = true;
+      },
+      addshopimg(data){
+          // console.log(data)
+          this.uploadDatashop=data;
+          this.uploadDatashop.file='';
+          this.uploadDatashop.fileUrl='';
+          this.diaimg.open=true; 
+      }
 
 
     }

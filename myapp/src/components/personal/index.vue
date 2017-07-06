@@ -24,8 +24,7 @@
     <hr/>
     <div class="youhui">
        <ul>
-         <li style="height: 130px;
-    width: 33%;">
+         <li style="height: 130px; width: 33%;">
            <p>周四大优惠</p>
            <span>低至5-7折</span>
          </li>

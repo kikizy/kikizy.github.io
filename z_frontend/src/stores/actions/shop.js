@@ -3,7 +3,7 @@ import { API } from '../API/API';
 
 export default{
 	 	 // 获取所有的shangp类型信息  --foodshop
-		getShop(store, {$http}) {
+		getShop(store, {$http}) { 
 			$http.get(API.admin.shop.list).then((response) => {
 				store.commit('update_APP_shop', response.data);
 		});
@@ -25,13 +25,29 @@ export default{
 				params:data
 			})
 		},
-		editShop(store,{$http,data}){
-	        console.log(data)
+		editShop(store,{$http,data}){ 
 	        return $http({
 	            method:'POST',
 	            url:API.admin.shop.edit,
 	            data:QS.stringify(data)
 	        })
+	     },
+	     showUpload(store,{$http,data}){
+	     //	console.log(data)
+	     	//通过formdata对象可以把数据解析成formdata格式
+	     	let fd=new FormData();
+	     	// fd.append(data,data); 
+
+     	 	fd.append('id', data.id);
+	        fd.append('cover', data.cover);
+	       //  fd.append('file',data.file);
+	       //  fd.append('fileUrl',data.fileUrl);
+	     	return $http({
+	     		method:'POST',
+	     		url:API.admin.shop.uploadCover,
+	            data:fd,
+          	    onUploadProgress: data.onUploadProgress
+	     	})
 	     }
 
 		// addfood(store, payload) {    //--foodshop

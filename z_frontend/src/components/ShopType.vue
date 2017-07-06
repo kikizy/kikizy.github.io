@@ -12,6 +12,7 @@
                 <mu-thead slot="header">
                     <mu-tr>
                         <mu-th tooltip="ID">ID</mu-th>
+                        <!-- <mu-th tooltip="图片">封面</mu-th> -->
                         <mu-th tooltip="名称">名称</mu-th>
                         <mu-th tooltip="状态">操作</mu-th>
                     </mu-tr>
@@ -19,11 +20,14 @@
                 <mu-tbody>
                     <mu-tr v-for="(list , index) in dataList">
                         <mu-td>{{index+1}}</mu-td>
+                        <!-- <mu-td></mu-td> -->
                         <mu-td>{{list.name}}</mu-td>
                         <mu-td>
                           <mu-raised-button label="删除" class="demo-raised-button" secondary @click="deleteShopType(list._id)" />
 
                           <mu-raised-button label="编辑" class="demo-raised-button" secondary @click="showEditShopType(list)" />
+
+                         <!-- <mu-raised-button label="上传" class="demo-raised-button" secondary @click="showEditShopType(list)" /> -->
                         </mu-td>
                     </mu-tr>
 
@@ -138,22 +142,22 @@ export default {
 
         },
         deleteShopType(id){
-        this.$store.dispatch('deleteShopType', {
-            $http: this.$http,
-            data:{id}
-        }).then((response)=>
-        {
-          if(response.data.code){
-             this.showPopup(true,response.data.message,3000);
-          }else{
-             this.showPopup(false, '删除成功', 1000);
-                 this.$store.dispatch('getShopTypes', {
-                 $http: this.$http
-             });
-          }
-         
-        })
-      },
+            this.$store.dispatch('deleteShopType', {
+                $http: this.$http,
+                data:{id}
+            }).then((response)=>
+            {
+              if(response.data.code){
+                 this.showPopup(true,response.data.message,3000);
+              }else{
+                 this.showPopup(false, '删除成功', 1000);
+                     this.$store.dispatch('getShopTypes', {
+                     $http: this.$http
+                 });
+              }
+             
+            })
+        },
         showPopup(type, message, time) {
             this.popup.error = type;
             this.popup.message = message;
@@ -163,21 +167,20 @@ export default {
             }, time)
         },
 
-         editShopType(){
+        editShopType(){
             // console.log(1);
-             if (this.editData.name == this.editData.origin_name) {
+            if (this.editData.name == this.editData.origin_name) {
                 this.showPopup(true, '未做任何修改', 1000);
                 return;
-             }
-             console.log(this.editData._id,this.editData.name);
+            }
+            console.log(this.editData._id,this.editData.name);
             this.$store.dispatch('editShopType',{
                 $http:this.$http,
                 data:{
                    id: this.editData._id,
                    name: this.editData.name 
                 }
-             }).then((response)=> {
-                  // console.log(response);
+             }).then((response)=> { 
                   if(response.data.code){
                     // if (response.data.code == 2) {
                     //     this.editData.name = this.editData.origin_name;
@@ -193,17 +196,19 @@ export default {
             })
         },
          // 显示编辑的弹窗
-        showEditShopType(data) {
-            // data.allowSelected = false;
+        showEditShopType(data) { 
             this.editData = data;
             this.editData.origin_name = data.name; 
             this.dialog.open = true;
-        }
-        // ,
-        // //编辑
-        // editShopType(){
-        //    // console.log(list.name);
-        //  }
+        },
+         // 显示上传的弹窗
+      //   addshopTypeimg(data){
+      //     // console.log(data)
+      //     this.uploadDatashopType=data;
+      //     this.uploadDatashopType.file='';
+      //     this.uploadDatashopType.fileUrl='';
+      //     this.diaimg.open=true; 
+      // }
     },
     computed: {
         dataList() {
